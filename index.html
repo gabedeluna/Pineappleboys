@@ -160,6 +160,7 @@
             opacity: 0.4;
             z-index: 0;
             animation: spin 20s linear infinite;
+            will-change: transform;
         }
 
         @keyframes spin {
@@ -186,11 +187,13 @@
 
             .coming-soon {
                 margin: 1.5rem 0;
+                animation: none; /* Disable glow animation on mobile */
             }
 
             .logo-container {
                 max-width: 200px;
                 margin: 2rem auto;
+                animation: none; /* Disable float animation on mobile */
             }
 
             .subtitle {
@@ -199,6 +202,25 @@
 
             .pineapple-accent {
                 font-size: 4rem;
+            }
+
+            /* Hide extra pineapples on mobile - only show first 3 */
+            .pineapple-4, .pineapple-5, .pineapple-6,
+            .pineapple-7, .pineapple-8, .pineapple-9, .pineapple-10 {
+                display: none;
+            }
+
+            .banner-container {
+                animation: none; /* Disable fade-in animation on mobile */
+            }
+
+            .content {
+                animation: none; /* Disable slide-up animation on mobile */
+            }
+
+            img {
+                animation: none; /* Disable image load animation on mobile */
+                opacity: 1;
             }
         }
 
@@ -213,6 +235,7 @@
 
             .pineapple-accent {
                 font-size: 3rem;
+                animation: none; /* Disable all pineapple animations on small mobile */
             }
         }
 
