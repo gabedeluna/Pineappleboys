@@ -99,8 +99,7 @@
             color: #ffd54f;
             text-shadow:
                 3px 3px 0 #ff8f00,
-                6px 6px 0 #f57c00,
-                9px 9px 20px rgba(0, 0, 0, 0.5);
+                6px 6px 20px rgba(0, 0, 0, 0.5);
             margin: 2rem 0;
             letter-spacing: 0.05em;
             line-height: 1.2;
@@ -111,14 +110,12 @@
             from {
                 text-shadow:
                     3px 3px 0 #ff8f00,
-                    6px 6px 0 #f57c00,
-                    9px 9px 20px rgba(0, 0, 0, 0.5);
+                    6px 6px 20px rgba(0, 0, 0, 0.5);
             }
             to {
                 text-shadow:
                     3px 3px 0 #ff8f00,
-                    6px 6px 0 #f57c00,
-                    9px 9px 30px rgba(255, 193, 7, 0.8),
+                    6px 6px 30px rgba(255, 193, 7, 0.8),
                     0 0 40px rgba(255, 193, 7, 0.4);
             }
         }
@@ -155,7 +152,7 @@
 
         /* Decorative pineapple elements */
         .pineapple-accent {
-            position: fixed;
+            position: absolute;
             font-size: 6rem;
             opacity: 0.4;
             z-index: 0;
@@ -187,7 +184,6 @@
 
             .coming-soon {
                 margin: 1.5rem 0;
-                animation: none; /* Disable glow animation on mobile */
             }
 
             .logo-container {
