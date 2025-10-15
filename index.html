@@ -15,10 +15,24 @@
             font-family: 'Georgia', serif;
             background: linear-gradient(135deg, #1a4d2e 0%, #2d5f3f 25%, #3d7350 50%, #2d5f3f 75%, #1a4d2e 100%);
             background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
             min-height: 100vh;
             overflow-x: hidden;
             position: relative;
+        }
+
+        /* Enable gradient animation only on desktop */
+        @media (min-width: 769px) {
+            body {
+                animation: gradientShift 15s ease infinite;
+            }
+        }
+
+        /* Static background on mobile for better performance */
+        @media (max-width: 768px) {
+            body {
+                background: #2d5f3f;
+                background-size: 100% 100%;
+            }
         }
 
         @keyframes gradientShift {
