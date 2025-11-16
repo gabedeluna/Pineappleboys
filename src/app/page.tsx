@@ -341,18 +341,18 @@ function SongCard({
         </div>
       )}
 
-      {showLyrics && hasLyrics && (
-        <pre className="song-lyrics">
-          {lyrics}
-        </pre>
-      )}
-
       {showEmbed && firstLink && (
         <div className="song-link-embed">
           <div className="embed-player">
             <LinkPlayer link={firstLink} />
           </div>
         </div>
+      )}
+
+      {showLyrics && hasLyrics && (
+        <pre className="song-lyrics">
+          {lyrics}
+        </pre>
       )}
     </article>
   );
