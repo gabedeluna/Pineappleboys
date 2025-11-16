@@ -22,8 +22,8 @@ body {
   background-color: var(--bg);
   background-image: url("/Background.png");
   background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center top;
+  background-size: cover;
+  background-position: center center;
   background-attachment: fixed;
   color: var(--text-main);
   display: flex;
