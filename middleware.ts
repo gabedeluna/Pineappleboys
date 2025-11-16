@@ -3,31 +3,39 @@ import { NextRequest, NextResponse } from "next/server";
 const SESSION_COOKIE = "pb_session";
 
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  try {
+    const { pathname } = req.nextUrl;
 
-  const isPublic =
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/api/login") ||
-    pathname.startsWith("/api/logout") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname.startsWith("/assets") ||
-    pathname.startsWith("/Background");
+    const isPublic =
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/api/login") ||
+      pathname.startsWith("/api/logout") ||
+      pathname.startsWith("/_next") ||
+      pathname.startsWith("/favicon") ||
+      pathname.startsWith("/assets") ||
+      pathname.startsWith("/Background");
 
-  if (isPublic) return NextResponse.next();
+    if (isPublic) return NextResponse.next();
 
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
-  const secret = process.env.SESSION_SECRET || "";
-  const valid = await safeVerify(token, secret);
+    const token = req.cookies.get(SESSION_COOKIE)?.value;
+    const secret = process.env.SESSION_SECRET || "";
+    const valid = await safeVerify(token, secret);
 
-  if (!valid) {
+    if (!valid) {
+      const url = req.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", pathname);
+      return NextResponse.redirect(url);
+    }
+
+    return NextResponse.next();
+  } catch {
+    // On any middleware error, fall back to forcing login instead of 500
     const url = req.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("next", pathname);
+    url.searchParams.set("next", req.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
-
-  return NextResponse.next();
 }
 
 async function safeVerify(token?: string, secret?: string) {
