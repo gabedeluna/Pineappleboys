@@ -379,7 +379,9 @@ body::before {
 }
 
 .select-field {
-  max-width: 130px;
+  max-width: 120px;
+  min-width: 100px;
+  padding-right: 2rem;
 }
 
 /* ADD CARD */
