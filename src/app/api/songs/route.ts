@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { createClient } from "@vercel/postgres";
+import { Pool } from "pg";
 
 type Song = {
   id: string;
@@ -13,12 +13,12 @@ type Song = {
   updated_at?: string;
 };
 
+const pool = new Pool({ connectionString: process.env.POSTGRES_URL });
+
 export async function GET() {
-  const client = createClient();
   try {
-    await client.connect();
-    await ensureTable(client);
-    const { rows } = await client.query<Song>('select * from songs order by created_at asc');
+    await ensureTable();
+    const { rows } = await pool.query<Song>('select * from songs order by created_at asc');
     return NextResponse.json({ songs: rows.map(normalizeRow) });
   } catch (error) {
     console.error("GET /api/songs error:", error);
@@ -26,16 +26,12 @@ export async function GET() {
       { error: "Failed to fetch songs", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }
 
 export async function POST(request: Request) {
-  const client = createClient();
   try {
-    await client.connect();
-    await ensureTable(client);
+    await ensureTable();
     const incoming = (await request.json().catch(() => ({}))) as Song;
     const song: Song = {
       id: incoming.id || randomUUID(),
@@ -48,7 +44,7 @@ export async function POST(request: Request) {
       lyrics: incoming.lyrics || "",
       links: Array.isArray(incoming.links) ? incoming.links : [],
     };
-    await client.query(
+    await pool.query(
       'insert into songs (id, title, status, progress, lyrics, links) values ($1, $2, $3, $4, $5, $6)',
       [song.id, song.title, song.status, song.progress, song.lyrics, JSON.stringify(song.links)]
     );
@@ -59,16 +55,12 @@ export async function POST(request: Request) {
       { error: "Failed to create song", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }
 
 export async function PUT(request: Request) {
-  const client = createClient();
   try {
-    await client.connect();
-    await ensureTable(client);
+    await ensureTable();
     const body = (await request.json().catch(() => ({}))) as {
       id?: string;
       updates?: Partial<Song>;
@@ -86,7 +78,7 @@ export async function PUT(request: Request) {
         ? updates.status
         : undefined;
 
-    const { rows } = await client.query<Song>(
+    const { rows } = await pool.query<Song>(
       `update songs
        set
          title = coalesce($1, title),
@@ -109,21 +101,17 @@ export async function PUT(request: Request) {
       { error: "Failed to update song", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }
 
 export async function DELETE(request: Request) {
-  const client = createClient();
   try {
-    await client.connect();
-    await ensureTable(client);
+    await ensureTable();
     const body = (await request.json().catch(() => ({}))) as { id?: string };
     if (!body.id) {
       return NextResponse.json({ error: "Missing id" }, { status: 400 });
     }
-    await client.query('delete from songs where id = $1', [body.id]);
+    await pool.query('delete from songs where id = $1', [body.id]);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("DELETE /api/songs error:", error);
@@ -131,13 +119,11 @@ export async function DELETE(request: Request) {
       { error: "Failed to delete song", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
-  } finally {
-    await client.end();
   }
 }
 
-async function ensureTable(client: any) {
-  await client.query(`
+async function ensureTable() {
+  await pool.query(`
     create table if not exists songs (
       id uuid primary key,
       title text not null,
