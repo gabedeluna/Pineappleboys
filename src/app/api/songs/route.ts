@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { sql } from "@vercel/postgres";
+import { createClient } from "@vercel/postgres";
 
 type Song = {
   id: string;
@@ -14,9 +14,11 @@ type Song = {
 };
 
 export async function GET() {
+  const client = createClient();
   try {
-    await ensureTable();
-    const { rows } = await sql<Song>`select * from songs order by created_at asc;`;
+    await client.connect();
+    await ensureTable(client);
+    const { rows } = await client.query<Song>('select * from songs order by created_at asc');
     return NextResponse.json({ songs: rows.map(normalizeRow) });
   } catch (error) {
     console.error("GET /api/songs error:", error);
@@ -24,81 +26,118 @@ export async function GET() {
       { error: "Failed to fetch songs", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
+  } finally {
+    await client.end();
   }
 }
 
 export async function POST(request: Request) {
-  await ensureTable();
-  const incoming = (await request.json().catch(() => ({}))) as Song;
-  const song: Song = {
-    id: incoming.id || randomUUID(),
-    title: incoming.title || "Untitled Song",
-    status: incoming.status === "future" ? "future" : "current",
-    progress:
-      typeof incoming.progress === "number"
-        ? clamp(incoming.progress, 0, 100)
-        : undefined,
-    lyrics: incoming.lyrics || "",
-    links: Array.isArray(incoming.links) ? incoming.links : [],
-  };
-  await sql`
-    insert into songs (id, title, status, progress, lyrics, links)
-    values (${song.id}, ${song.title}, ${song.status}, ${song.progress}, ${
-      song.lyrics
-    }, ${JSON.stringify(song.links)})
-  `;
-  return NextResponse.json({ song });
+  const client = createClient();
+  try {
+    await client.connect();
+    await ensureTable(client);
+    const incoming = (await request.json().catch(() => ({}))) as Song;
+    const song: Song = {
+      id: incoming.id || randomUUID(),
+      title: incoming.title || "Untitled Song",
+      status: incoming.status === "future" ? "future" : "current",
+      progress:
+        typeof incoming.progress === "number"
+          ? clamp(incoming.progress, 0, 100)
+          : undefined,
+      lyrics: incoming.lyrics || "",
+      links: Array.isArray(incoming.links) ? incoming.links : [],
+    };
+    await client.query(
+      'insert into songs (id, title, status, progress, lyrics, links) values ($1, $2, $3, $4, $5, $6)',
+      [song.id, song.title, song.status, song.progress, song.lyrics, JSON.stringify(song.links)]
+    );
+    return NextResponse.json({ song });
+  } catch (error) {
+    console.error("POST /api/songs error:", error);
+    return NextResponse.json(
+      { error: "Failed to create song", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  } finally {
+    await client.end();
+  }
 }
 
 export async function PUT(request: Request) {
-  await ensureTable();
-  const body = (await request.json().catch(() => ({}))) as {
-    id?: string;
-    updates?: Partial<Song>;
-  };
-  if (!body.id || !body.updates) {
-    return NextResponse.json({ error: "Missing id or updates" }, { status: 400 });
-  }
-  const updates = body.updates;
-  const progress =
-    typeof updates.progress === "number"
-      ? clamp(updates.progress, 0, 100)
-      : undefined;
-  const status =
-    updates.status === "future" || updates.status === "current"
-      ? updates.status
-      : undefined;
+  const client = createClient();
+  try {
+    await client.connect();
+    await ensureTable(client);
+    const body = (await request.json().catch(() => ({}))) as {
+      id?: string;
+      updates?: Partial<Song>;
+    };
+    if (!body.id || !body.updates) {
+      return NextResponse.json({ error: "Missing id or updates" }, { status: 400 });
+    }
+    const updates = body.updates;
+    const progress =
+      typeof updates.progress === "number"
+        ? clamp(updates.progress, 0, 100)
+        : undefined;
+    const status =
+      updates.status === "future" || updates.status === "current"
+        ? updates.status
+        : undefined;
 
-  const { rows } = await sql<Song>`
-    update songs
-    set
-      title = coalesce(${updates.title}, title),
-      status = coalesce(${status}, status),
-      progress = coalesce(${progress}, progress),
-      lyrics = coalesce(${updates.lyrics}, lyrics),
-      links = coalesce(${updates.links ? JSON.stringify(updates.links) : null}, links),
-      updated_at = now()
-    where id = ${body.id}
-    returning *;
-  `;
-  if (!rows[0]) {
-    return NextResponse.json({ error: "Song not found" }, { status: 404 });
+    const { rows } = await client.query<Song>(
+      `update songs
+       set
+         title = coalesce($1, title),
+         status = coalesce($2, status),
+         progress = coalesce($3, progress),
+         lyrics = coalesce($4, lyrics),
+         links = coalesce($5, links),
+         updated_at = now()
+       where id = $6
+       returning *`,
+      [updates.title, status, progress, updates.lyrics, updates.links ? JSON.stringify(updates.links) : null, body.id]
+    );
+    if (!rows[0]) {
+      return NextResponse.json({ error: "Song not found" }, { status: 404 });
+    }
+    return NextResponse.json({ song: normalizeRow(rows[0]) });
+  } catch (error) {
+    console.error("PUT /api/songs error:", error);
+    return NextResponse.json(
+      { error: "Failed to update song", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  } finally {
+    await client.end();
   }
-  return NextResponse.json({ song: normalizeRow(rows[0]) });
 }
 
 export async function DELETE(request: Request) {
-  await ensureTable();
-  const body = (await request.json().catch(() => ({}))) as { id?: string };
-  if (!body.id) {
-    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const client = createClient();
+  try {
+    await client.connect();
+    await ensureTable(client);
+    const body = (await request.json().catch(() => ({}))) as { id?: string };
+    if (!body.id) {
+      return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    }
+    await client.query('delete from songs where id = $1', [body.id]);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("DELETE /api/songs error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete song", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  } finally {
+    await client.end();
   }
-  await sql`delete from songs where id = ${body.id};`;
-  return NextResponse.json({ ok: true });
 }
 
-async function ensureTable() {
-  await sql`
+async function ensureTable(client: any) {
+  await client.query(`
     create table if not exists songs (
       id uuid primary key,
       title text not null,
@@ -108,8 +147,8 @@ async function ensureTable() {
       links jsonb default '[]'::jsonb,
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now()
-    );
-  `;
+    )
+  `);
 }
 
 function clamp(num: number, min: number, max: number) {
