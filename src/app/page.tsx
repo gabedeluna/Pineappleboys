@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, useCallback, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 
 type LinkEmbed = {
@@ -29,24 +29,25 @@ export default function Home() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch("/api/songs", { cache: "no-store" });
-        if (!res.ok) throw new Error("Failed to load songs");
-        const data = (await res.json()) as { songs: Song[] };
-        const curr = data.songs.filter((s) => s.status === "current");
-        const fut = data.songs.filter((s) => s.status === "future");
-        setCurrentSongs(curr);
-        setFutureSongs(fut);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load songs");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+  const loadSongs = useCallback(async () => {
+    try {
+      const res = await fetch("/api/songs", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to load songs");
+      const data = (await res.json()) as { songs: Song[] };
+      const curr = data.songs.filter((s) => s.status === "current");
+      const fut = data.songs.filter((s) => s.status === "future");
+      setCurrentSongs(curr);
+      setFutureSongs(fut);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load songs");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadSongs();
+  }, [loadSongs]);
 
   const handleAddSong = async (status: "current" | "future") => {
     const newSong: Song = {
@@ -57,12 +58,8 @@ export default function Home() {
       lyrics: "",
       links: [],
     };
-    if (status === "current") {
-      setCurrentSongs((prev) => [...prev, newSong]);
-    } else {
-      setFutureSongs((prev) => [...prev, newSong]);
-    }
     await saveSong(newSong);
+    await loadSongs();
   };
 
   const handleUpdateSong = async (
@@ -70,24 +67,13 @@ export default function Home() {
     id: string,
     updates: Partial<Song>,
   ) => {
-    const updater = (list: Song[]) =>
-      list.map((song) => (song.id === id ? { ...song, ...updates } : song));
-    if (status === "current") {
-      setCurrentSongs(updater);
-    } else {
-      setFutureSongs(updater);
-    }
     await persistSong({ id, ...updates });
+    await loadSongs();
   };
 
   const handleDeleteSong = async (status: "current" | "future", id: string) => {
-    const remover = (list: Song[]) => list.filter((song) => song.id !== id);
-    if (status === "current") {
-      setCurrentSongs(remover);
-    } else {
-      setFutureSongs(remover);
-    }
     await deleteSong(id);
+    await loadSongs();
   };
 
   const persistSong = async (updates: Partial<Song> & { id: string }) => {
