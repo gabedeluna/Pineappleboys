@@ -18,7 +18,10 @@ export async function middleware(req: NextRequest) {
 
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   const secret = process.env.SESSION_SECRET || "";
-  const valid = token && secret && (await verifyEdgeSessionToken(token, secret));
+  const valid =
+    token && secret
+      ? await verifyEdgeSessionToken(token, secret).catch(() => null)
+      : null;
 
   if (!valid) {
     const url = req.nextUrl.clone();
@@ -31,9 +34,11 @@ export async function middleware(req: NextRequest) {
 }
 
 async function verifyEdgeSessionToken(token: string, secret: string) {
+  if (!secret) return null;
   const [encoded, sig] = token.split(".");
   if (!encoded || !sig) return null;
-  const expected = await sign(encoded, secret);
+  const expected = await sign(encoded, secret).catch(() => null);
+  if (!expected) return null;
   if (!timingSafeEqual(sig, expected)) return null;
   try {
     const payload = JSON.parse(fromBase64Url(encoded)) as { u: string; exp: number };
@@ -45,6 +50,7 @@ async function verifyEdgeSessionToken(token: string, secret: string) {
 }
 
 async function sign(value: string, secret: string) {
+  if (!secret) throw new Error("No secret");
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
