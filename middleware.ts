@@ -18,10 +18,7 @@ export async function middleware(req: NextRequest) {
 
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   const secret = process.env.SESSION_SECRET || "";
-  const valid =
-    token && secret
-      ? await verifyEdgeSessionToken(token, secret).catch(() => null)
-      : null;
+  const valid = await safeVerify(token, secret);
 
   if (!valid) {
     const url = req.nextUrl.clone();
@@ -33,20 +30,23 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-async function verifyEdgeSessionToken(token: string, secret: string) {
-  if (!secret) return null;
-  const [encoded, sig] = token.split(".");
-  if (!encoded || !sig) return null;
-  const expected = await sign(encoded, secret).catch(() => null);
-  if (!expected) return null;
-  if (!timingSafeEqual(sig, expected)) return null;
+async function safeVerify(token?: string, secret?: string) {
   try {
-    const payload = JSON.parse(fromBase64Url(encoded)) as { u: string; exp: number };
-    if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
-    return payload;
+    return await verifyEdgeSessionToken(token, secret);
   } catch {
     return null;
   }
+}
+
+async function verifyEdgeSessionToken(token?: string, secret?: string) {
+  if (!token || !secret) return null;
+  const [encoded, sig] = token.split(".");
+  if (!encoded || !sig) return null;
+  const expected = await sign(encoded, secret);
+  if (!expected || !timingSafeEqual(sig, expected)) return null;
+  const payload = JSON.parse(fromBase64Url(encoded)) as { u: string; exp: number };
+  if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
+  return payload;
 }
 
 async function sign(value: string, secret: string) {
