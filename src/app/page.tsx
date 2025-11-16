@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 
 type LinkEmbed = {
@@ -17,6 +17,8 @@ type Song = {
   lyrics?: string;
   links?: LinkEmbed[];
 };
+
+type VarStyle = CSSProperties & { ["--p"]?: number };
 
 const makeId = () => `song_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
@@ -281,10 +283,12 @@ function SongCard({
           <div className="song-meta">
             <div
               className="song-meta-fill"
-              style={{
-                width: "calc((100% - 16px) * var(--p) + 8px)",
-                ["--p" as const]: progressRatio,
-              }}
+              style={
+                {
+                  width: "calc((100% - 16px) * var(--p) + 8px)",
+                  "--p": progressRatio,
+                } as VarStyle
+              }
               aria-label={`Progress ${normalizedProgress || 5}%`}
             />
           </div>
