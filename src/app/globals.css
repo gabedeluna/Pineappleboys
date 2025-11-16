@@ -589,8 +589,10 @@ body {
 
 @media (max-width: 420px) {
   body {
-    background-size: 100% 100%, 100% auto;
-    background-position: center top, center top;
+    background-image: url("/Background.png");
+    background-size: 100% 100%;
+    background-position: center center;
+    background-repeat: no-repeat;
   }
 
   .header-title {
