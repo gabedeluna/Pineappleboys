@@ -37,19 +37,7 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(1, 37, 38, 0.95) 0%,
-      rgba(1, 37, 38, 0.8) 12%,
-      rgba(1, 37, 38, 0.4) 24%,
-      rgba(1, 37, 38, 0) 38%,
-      rgba(1, 37, 38, 0) 62%,
-      rgba(1, 37, 38, 0.4) 76%,
-      rgba(1, 37, 38, 0.8) 88%,
-      rgba(1, 37, 38, 0.95) 100%
-    ),
-    url("/Background.png") center top / 900px auto no-repeat;
+  background: url("/Background.png") center top / clamp(480px, 60vw, 700px) auto no-repeat;
   z-index: -1;
   pointer-events: none;
 }
