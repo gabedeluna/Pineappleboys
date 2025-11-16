@@ -14,9 +14,17 @@ type Song = {
 };
 
 export async function GET() {
-  await ensureTable();
-  const { rows } = await sql<Song>`select * from songs order by created_at asc;`;
-  return NextResponse.json({ songs: rows.map(normalizeRow) });
+  try {
+    await ensureTable();
+    const { rows } = await sql<Song>`select * from songs order by created_at asc;`;
+    return NextResponse.json({ songs: rows.map(normalizeRow) });
+  } catch (error) {
+    console.error("GET /api/songs error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch songs", details: error instanceof Error ? error.message : String(error) },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: Request) {
