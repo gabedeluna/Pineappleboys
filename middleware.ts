@@ -3,9 +3,7 @@ import { verifySessionToken } from "@/lib/auth";
 
 const SESSION_COOKIE = "pb_session";
 
-export const runtime = "nodejs";
-
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   const isPublic =
@@ -21,7 +19,7 @@ export function middleware(req: NextRequest) {
 
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   const secret = process.env.SESSION_SECRET || "";
-  const valid = token && secret && verifySessionToken(token, secret);
+  const valid = token && secret && (await verifySessionToken(token, secret));
 
   if (!valid) {
     const url = req.nextUrl.clone();

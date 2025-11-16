@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const token = createSessionToken(username, sessionSecret, DAY * 7);
+  const token = await createSessionToken(username, sessionSecret, DAY * 7);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,

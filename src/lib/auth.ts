@@ -1,13 +1,9 @@
-import crypto from "crypto";
-
-const ALG = "sha256";
-
 type SessionPayload = {
   u: string;
   exp: number; // unix seconds
 };
 
-export function createSessionToken(
+export async function createSessionToken(
   username: string,
   secret: string,
   ttlSeconds: number,
@@ -16,21 +12,19 @@ export function createSessionToken(
     u: username,
     exp: Math.floor(Date.now() / 1000) + ttlSeconds,
   };
-  const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const sig = sign(encoded, secret);
+  const encoded = toBase64Url(JSON.stringify(payload));
+  const sig = await sign(encoded, secret);
   return `${encoded}.${sig}`;
 }
 
-export function verifySessionToken(token: string, secret: string) {
+export async function verifySessionToken(token: string, secret: string) {
   if (!token || !secret) return null;
   const [encoded, sig] = token.split(".");
   if (!encoded || !sig) return null;
-  const expected = sign(encoded, secret);
+  const expected = await sign(encoded, secret);
   if (!timingSafeEqual(sig, expected)) return null;
   try {
-    const payload = JSON.parse(
-      Buffer.from(encoded, "base64url").toString("utf8"),
-    ) as SessionPayload;
+    const payload = JSON.parse(fromBase64Url(encoded)) as SessionPayload;
     if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) {
       return null;
     }
@@ -40,13 +34,49 @@ export function verifySessionToken(token: string, secret: string) {
   }
 }
 
-function sign(value: string, secret: string) {
-  return crypto.createHmac(ALG, secret).update(value).digest("base64url");
+async function sign(value: string, secret: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(value),
+  );
+  return arrayBufferToBase64Url(signature);
 }
 
 function timingSafeEqual(a: string, b: string) {
-  const ab = Buffer.from(a);
-  const bb = Buffer.from(b);
-  if (ab.length !== bb.length) return false;
-  return crypto.timingSafeEqual(ab, bb);
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+function toBase64Url(input: string) {
+  return btoa(input)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+function fromBase64Url(input: string) {
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  return atob(padded);
+}
+
+function arrayBufferToBase64Url(buffer: ArrayBuffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return toBase64Url(binary);
 }
