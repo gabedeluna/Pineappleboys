@@ -576,8 +576,13 @@ body {
 /* MOBILE TWEAKS */
 
 @media (max-width: 420px) {
+  html {
+    height: 100%;
+  }
+
   body {
-    background-size: 100vw 100vh;
+    height: 100%;
+    background-size: 100vw 100svh;
     background-position: top center;
     background-attachment: fixed;
   }
