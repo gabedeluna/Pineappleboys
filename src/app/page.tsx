@@ -169,6 +169,7 @@ function SongCard({
     song.links?.[0]?.type || "youtube",
   );
   const [linkUrl, setLinkUrl] = useState(song.links?.[0]?.url || "");
+  const [progressTimeout, setProgressTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const hasLyrics = useMemo(() => lyrics.trim().length > 0, [lyrics]);
   const hasLinks = useMemo(() => linkUrl.trim().length > 0, [linkUrl]);
@@ -286,7 +287,18 @@ function SongCard({
             onChange={(e) => {
               const next = Number(e.target.value);
               setProgress(next);
-              onChange({ progress: next });
+
+              // Clear existing timeout
+              if (progressTimeout) {
+                clearTimeout(progressTimeout);
+              }
+
+              // Debounce the save - only save after user stops dragging for 500ms
+              const timeout = setTimeout(() => {
+                onChange({ progress: next });
+              }, 500);
+
+              setProgressTimeout(timeout);
             }}
           />
         </div>
