@@ -234,7 +234,8 @@ body::before {
 
 .song-meta-container {
   position: relative;
-  margin-bottom: 0.65rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .song-meta {
