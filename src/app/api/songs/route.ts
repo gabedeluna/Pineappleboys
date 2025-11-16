@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     progress:
       typeof incoming.progress === "number"
         ? clamp(incoming.progress, 0, 100)
-        : null,
+        : undefined,
     lyrics: incoming.lyrics || "",
     links: Array.isArray(incoming.links) ? incoming.links : [],
   };

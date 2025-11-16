@@ -3,6 +3,8 @@ import { verifySessionToken } from "@/lib/auth";
 
 const SESSION_COOKIE = "pb_session";
 
+export const runtime = "nodejs";
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
