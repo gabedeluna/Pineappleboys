@@ -354,7 +354,7 @@ body::before {
   padding: 0.7rem 0.85rem 0.7rem 0.85rem;
   background: rgba(1, 30, 33, 0.9);
   color: var(--text-main);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   resize: vertical;
   min-height: 200px;
   outline: none;
@@ -506,7 +506,7 @@ body::before {
   margin-top: 0.6rem;
   padding: 0.4rem 0.85rem 0rem 0.85rem;
   border-top: 1px solid rgba(184, 230, 216, 0.18);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 400;
   line-height: 1.4;
   color: var(--accent-soft);
