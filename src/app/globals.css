@@ -382,6 +382,7 @@ body::before {
   max-width: 140px;
   min-width: 110px;
   padding-right: 1.75rem;
+  background-position: right 0.5rem center;
 }
 
 /* ADD CARD */
