@@ -30,7 +30,7 @@ body {
 .app {
   width: 100%;
   max-width: 480px;
-  padding: 8rem 1.5rem 12rem;
+  padding: 10rem 1.5rem 12rem;
 }
 
 body::before {
