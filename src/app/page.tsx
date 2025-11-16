@@ -116,18 +116,6 @@ export default function Home() {
 
   return (
     <div className="app">
-      <div className="top-bar">
-        <button
-          className="btn-pill logout-btn"
-          onClick={async () => {
-            await fetch("/api/logout", { method: "POST" });
-            router.replace("/login");
-          }}
-        >
-          Log Out
-        </button>
-      </div>
-
       {loading && <p className="hint">Loading songs...</p>}
       {error && <p className="error-text">{error}</p>}
 
@@ -156,6 +144,18 @@ export default function Home() {
         ))}
         <AddCard label="Add Song" onAdd={() => handleAddSong("future")} />
       </section>
+
+      <div className="bottom-bar">
+        <button
+          className="btn-pill logout-btn"
+          onClick={async () => {
+            await fetch("/api/logout", { method: "POST" });
+            router.replace("/login");
+          }}
+        >
+          Log Out
+        </button>
+      </div>
     </div>
   );
 }
