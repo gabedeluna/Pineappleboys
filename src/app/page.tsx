@@ -20,7 +20,7 @@ type Song = {
 
 type VarStyle = CSSProperties & { ["--p"]?: number };
 
-const makeId = () => `song_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+const makeId = () => crypto.randomUUID();
 
 export default function Home() {
   const [currentSongs, setCurrentSongs] = useState<Song[]>([]);
@@ -48,7 +48,7 @@ export default function Home() {
     load();
   }, []);
 
-  const handleAddSong = (status: "current" | "future") => {
+  const handleAddSong = async (status: "current" | "future") => {
     const newSong: Song = {
       id: makeId(),
       title: "Untitled Song",
@@ -59,14 +59,13 @@ export default function Home() {
     };
     if (status === "current") {
       setCurrentSongs((prev) => [...prev, newSong]);
-      saveSong(newSong);
     } else {
       setFutureSongs((prev) => [...prev, newSong]);
-      saveSong(newSong);
     }
+    await saveSong(newSong);
   };
 
-  const handleUpdateSong = (
+  const handleUpdateSong = async (
     status: "current" | "future",
     id: string,
     updates: Partial<Song>,
@@ -78,17 +77,17 @@ export default function Home() {
     } else {
       setFutureSongs(updater);
     }
-    persistSong({ id, ...updates });
+    await persistSong({ id, ...updates });
   };
 
-  const handleDeleteSong = (status: "current" | "future", id: string) => {
+  const handleDeleteSong = async (status: "current" | "future", id: string) => {
     const remover = (list: Song[]) => list.filter((song) => song.id !== id);
     if (status === "current") {
       setCurrentSongs(remover);
     } else {
       setFutureSongs(remover);
     }
-    deleteSong(id);
+    await deleteSong(id);
   };
 
   const persistSong = async (updates: Partial<Song> & { id: string }) => {
