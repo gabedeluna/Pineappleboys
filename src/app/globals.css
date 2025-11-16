@@ -20,24 +20,11 @@
 body {
   min-height: 100vh;
   background-color: var(--bg);
-  /* Dark edge fade + centered pattern */
-  background-image:
-    linear-gradient(
-      90deg,
-      rgba(1, 37, 38, 0.95) 0%,
-      rgba(1, 37, 38, 0.8) 12%,
-      rgba(1, 37, 38, 0.4) 24%,
-      rgba(1, 37, 38, 0) 38%,
-      rgba(1, 37, 38, 0) 62%,
-      rgba(1, 37, 38, 0.4) 76%,
-      rgba(1, 37, 38, 0.8) 88%,
-      rgba(1, 37, 38, 0.95) 100%
-    ),
-    url("/Background.png");
-  background-repeat: no-repeat, no-repeat;
-  background-size: 100% 100%, contain;
-  background-position: center top, center top;
-  background-attachment: fixed, fixed;
+  background-image: url("/Background.png");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center top;
+  background-attachment: fixed;
   color: var(--text-main);
   display: flex;
   justify-content: center;
@@ -589,10 +576,8 @@ body {
 
 @media (max-width: 420px) {
   body {
-    background-image: url("/Background.png") !important;
-    background-size: 100% 100% !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
+    background-size: 100% 100%;
+    background-position: center center;
   }
 
   .header-title {
