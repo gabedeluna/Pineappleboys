@@ -342,7 +342,7 @@ function SongCard({
       )}
 
       {showLyrics && hasLyrics && (
-        <pre className="song-lyrics" style={{ overflowWrap: "break-word", wordBreak: "break-word" }}>
+        <pre className="song-lyrics">
           {lyrics}
         </pre>
       )}

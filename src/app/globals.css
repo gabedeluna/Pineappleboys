@@ -513,8 +513,8 @@ body::before {
   scrollbar-width: thin;
   scrollbar-gutter: stable;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: normal;
+  word-break: normal;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", "Courier New",
     monospace;
 }
